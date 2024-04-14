@@ -64,28 +64,28 @@ void uinput_click(int fd, int code) {
 }
 
 static void check_snd(const char *msg, int err) {
-	if (err < 0) {
-		fprintf(stderr, "%s: %s\n", msg, snd_strerror(err));
-    	exit(EXIT_FAILURE);
+    if (err < 0) {
+        fprintf(stderr, "%s: %s\n", msg, snd_strerror(err));
+        exit(EXIT_FAILURE);
     }
 }
 
 static snd_seq_t *seq_init(const char *port_name) {
     static snd_seq_t *seq;
     static snd_seq_addr_t port;
-	int err;
-	err = snd_seq_open(&seq, "default", SND_SEQ_OPEN_DUPLEX, 0);
-	check_snd("Cannot open sequencer", err);
-	err = snd_seq_set_client_name(seq, "rb3keytar");
-	check_snd("Cannot set client name", err);
-	err = snd_seq_parse_address(seq, &port, port_name);
-	check_snd("Invalid port", err);
-	err = snd_seq_create_simple_port(seq, "rb3keytar",
-		SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE,
-		SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
-	check_snd("Cannot create port", err);
+    int err;
+    err = snd_seq_open(&seq, "default", SND_SEQ_OPEN_DUPLEX, 0);
+    check_snd("Cannot open sequencer", err);
+    err = snd_seq_set_client_name(seq, "rb3keytar");
+    check_snd("Cannot set client name", err);
+    err = snd_seq_parse_address(seq, &port, port_name);
+    check_snd("Invalid port", err);
+    err = snd_seq_create_simple_port(seq, "rb3keytar",
+        SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE,
+        SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
+    check_snd("Cannot create port", err);
     err = snd_seq_connect_from(seq, 0, port.client, port.port);
-	check_snd("Cannot connect from port", err);
+    check_snd("Cannot connect from port", err);
     return seq;
 }
 
@@ -94,13 +94,13 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Specify alsa midi port as a parameter\n");        
         exit(EXIT_FAILURE);
     }
-	snd_seq_t *seq = seq_init(argv[1]);
+    snd_seq_t *seq = seq_init(argv[1]);
     int uinput_fd = uinput_init();
     if (uinput_fd < 0) {
         fprintf(stderr, "Cannot create uinput\n");        
         exit(EXIT_FAILURE);
     }
-	for (;;) {
+    for (;;) {
         snd_seq_event_t *ev;
         if (snd_seq_event_input(seq, &ev) < 0)
             break;
@@ -129,6 +129,6 @@ int main(int argc, char *argv[]) {
         } else if (ev->type == SND_SEQ_EVENT_PITCHBEND) {
             uinput_emit_syn(uinput_fd, EV_ABS, ABS_Z, ev->data.control.value);
         }
-	}
-	return 0;
+    }
+    return 0;
 }
